@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,12 +6,178 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Index</title>
+    <style>
+        #canvas-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #canvas, #image {
+            width: 800px;
+            height: 600px;
+        }
+
+        #image {
+            position: relative;
+            z-index: 0;
+        }
+
+        #coordinates {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 16px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+        }
+
+        #zone-input {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        #submit-button {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body class="container">
     <h1>Camara</h1>
-    <dvi>
-        <img src="{{url_for('video')}}" width="50%">
-    </dvi>
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+        <img id="image" src="{{url_for('video')}}" width="800" height="600">
+    </div>
+    <div id="coordinates">
+        Punto 1: (<span id="point1-x"></span>, <span id="point1-y"></span>)<br>
+        Punto 2: (<span id="point2-x"></span>, <span id="point2-y"></span>)<br>
+        Punto 3: (<span id="point3-x"></span>, <span id="point3-y"></span>)<br>
+        Punto 4: (<span id="point4-x"></span>, <span id="point4-y"></span>)
+    </div>
+    <input type="text" id="zone-input" >
+    <button id="submit-button" onclick="updateZone()">Enviar</button>
 
+    <script>
+        // Obtén el lienzo y el contexto
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var isDrawing = false;
+        var points = [];
+
+        // Establece el tamaño del canvas al tamaño de la imagen
+        var image = document.getElementById('image');
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        // Manejadores de eventos del ratón
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', endDrawing);
+        canvas.addEventListener('mouseleave', endDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            points.push({ x: e.offsetX, y: e.offsetY });
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            points[points.length - 1] = { x: e.offsetX, y: e.offsetY };
+            drawArea();
+            updateCoordinates();
+            updateZoneInput();
+        }
+
+        function endDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            drawArea();
+            updateCoordinates();
+            updateZoneInput();
+        }
+
+        // Función para dibujar el área en el lienzo
+        function drawArea() {
+            // Limpia el lienzo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibuja el área
+            if (points.length >= 2) {
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (var i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        // Función para actualizar las coordenadas
+        function updateCoordinates() {
+            var point1Label = document.getElementById('point1-x');
+            var point2Label = document.getElementById('point2-x');
+            var point3Label = document.getElementById('point3-x');
+            var point4Label = document.getElementById('point4-x');
+            var point1YLabel = document.getElementById('point1-y');
+            var point2YLabel = document.getElementById('point2-y');
+            var point3YLabel = document.getElementById('point3-y');
+            var point4YLabel = document.getElementById('point4-y');
+
+            if (points.length >= 1) {
+                point1Label.textContent = points[0].x;
+                point1YLabel.textContent = points[0].y;
+            }
+            if (points.length >= 2) {
+                point2Label.textContent = points[1].x;
+                point2YLabel.textContent = points[1].y;
+            }
+            if (points.length >= 3) {
+                point3Label.textContent = points[2].x;
+                point3YLabel.textContent = points[2].y;
+            }
+            if (points.length >= 4) {
+                point4Label.textContent = points[3].x;
+                point4YLabel.textContent = points[3].y;
+            }
+        }
+
+        // Función para actualizar el campo de entrada de la zona
+        function updateZoneInput() {
+            var zoneInput = document.getElementById('zone-input');
+            var zone = '';
+            for (var i = 0; i < points.length; i++) {
+                zone += points[i].x + ',' + points[i].y;
+                if (i !== points.length - 1) {
+                    zone += ',';
+                }
+            }
+            zoneInput.value = zone;
+        }
+
+        // Función para enviar los datos del campo de entrada
+        function updateZone() {
+            var zoneInput = document.getElementById('zone-input');
+            var zone = zoneInput.value;
+
+            // Enviar los datos al servidor utilizando AJAX o cualquier otro método
+            // Ejemplo de código AJAX:
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/update_zone', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send('zone=' + encodeURIComponent(zone));
+
+            // Lógica adicional después de enviar los datos si es necesario
+        }
+    </script>
 </body>
 </html>

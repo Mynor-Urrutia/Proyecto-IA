@@ -1,29 +1,13 @@
 # Importación de Librerias
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 import cv2
 import mediapipe as np
 import torch
 import numpy as np
-import matplotlib.path as mplPath
 
 # Realizar captura de cámara
 cap = cv2.VideoCapture(0)
-
-ZONE = np.array([
-    [200, 300],
-    [403, 470],
-    [476, 655],
-    [498, 710],
-    [1237, 714],
-    [1217, 523],
-    [1139, 469],
-    [1009, 393],
-])
-
-def get_center(bbox):
-    # Obtiene el centro del cuadro delimitador
-    center = ((bbox[0] + bbox[2]) // 2, (bbox[1] + bbox[3]) // 2)
-    return center
+ZONE = None  # Se inicializa ZONE como None
 
 def load_model():
     # Carga el modelo de detección de objetos YOLOv5
@@ -37,12 +21,10 @@ def get_bboxes(preds):
     df = df[df["name"] == "person"]
     return df[["xmin", "ymin", "xmax", "ymax"]].values.astype(int)
 
-def is_valid_detection(xc, yc):
-    # Verifica si la detección está dentro de la zona válida
-    return mplPath.Path(ZONE).contains_point((xc, yc))
-
 # Función Frames
 def gen_frame():
+    global ZONE  # Declarar la variable ZONE como global
+
     model = load_model()
 
     while True:
@@ -51,14 +33,20 @@ def gen_frame():
         if not ret:
             break
 
+        if ZONE is None:
+            height, width, _ = frame.shape
+            ZONE = np.array([[0, 0], [width, 0], [width, height], [0, height]])
+
         preds = model(frame)
         bboxes = get_bboxes(preds)
 
         detections = 0
         for box in bboxes:
-            xc, yc = get_center(box)
+            xc = (box[0] + box[2]) // 2
+            yc = (box[1] + box[3]) // 2
 
-            if is_valid_detection(xc, yc):
+            # Verifica si la detección está dentro de la zona válida
+            if cv2.pointPolygonTest(ZONE, (xc, yc), False) >= 0:
                 detections += 1
 
             # Dibuja el centro y el cuadro delimitador en el frame
@@ -87,6 +75,25 @@ def index():
 @app.route('/video')
 def video():
     return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# Ruta para actualizar ZONE
+@app.route('/update_zone', methods=['POST'])
+def update_zone():
+    global ZONE
+    zone_str = request.form.get('zone')
+    coordinates = zone_str.split(',')
+
+    if len(coordinates) != 8:
+        return 'Error: Las coordenadas deben tener 4 valores separados por comas.'
+
+    try:
+        ZONE = np.array([[int(coordinates[0]), int(coordinates[1])],
+                         [int(coordinates[2]), int(coordinates[3])],
+                         [int(coordinates[4]), int(coordinates[5])],
+                         [int(coordinates[6]), int(coordinates[7])]])
+        return 'ZONE actualizado correctamente'
+    except ValueError:
+        return 'Error: Las coordenadas deben ser valores numéricos enteros.'
 
 # Ejecutar index.hmtl
 if __name__ == "__main__":
