@@ -1,0 +1,7 @@
+<form action="/update_name" method="POST">
+    <select id="nameSelect" onchange="updateSelection()" name="selected_name">
+        <option value="person" {% if selected_name == 'person' %}selected{% endif %}>Person</option>
+        <option value="car" {% if selected_name == 'car' %}selected{% endif %}>Car</option>
+    </select>
+    <input type="submit" value="Enviar">
+</form>

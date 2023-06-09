@@ -6,7 +6,6 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Index</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         #canvas-container {
             position: relative;
@@ -30,7 +29,15 @@
             z-index: 0;
         }
 
-
+        #coordinates {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 16px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+        }
 
         #zone-input {
             margin-top: 10px;
@@ -46,7 +53,7 @@
     <h1>Camara</h1>
     <div id="canvas-container">
         <canvas id="canvas"></canvas>
-        <img id="image" src="{{url_for('video')}}" width="800" height="600">
+        <img id="image" src="{{url_for('video_feed')}}" width="800" height="600">
     </div>
     <div id="coordinates">
         Punto 1: (<span id="point1-x"></span>, <span id="point1-y"></span>)<br>
@@ -54,21 +61,8 @@
         Punto 3: (<span id="point3-x"></span>, <span id="point3-y"></span>)<br>
         Punto 4: (<span id="point4-x"></span>, <span id="point4-y"></span>)
     </div>
-    <input type="text" id="zone-input">
+    <input type="text" id="zone-input" >
     <button id="submit-button" onclick="updateZone()">Enviar</button>
-
-    <h2>Seleccione el nombre:</h2>
-    <form action="/update_name" method="POST">
-        <label for="selected_name">Select a name:</label>
-        <select name="selected_name" id="selected_name">
-            {% for name in objetos %}
-            <option value="{{ name }}">{{ name }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <button type="submit">Submit</button>
-    </form>
-
 
     <script>
         // Obtén el lienzo y el contexto
@@ -184,28 +178,6 @@
 
             // Lógica adicional después de enviar los datos si es necesario
         }
-
-         function updateSelection() {
-            var selectedName = document.getElementById('nameSelect').value;
-            fetch('/update_name', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'selected_name=' + encodeURIComponent(selectedName)
-            })
-            .then(function(response) {
-                if (response.ok) {
-                    location.reload();  // Actualizar la página
-                } else {
-                    console.log('Error al enviar la selección al servidor');
-                }
-            })
-            .catch(function(error) {
-                console.log('Error al enviar la selección al servidor:', error);
-            });
-        }
-
     </script>
 </body>
 </html>

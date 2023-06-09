@@ -1,7 +1,7 @@
 # Importación de Librerias
 from flask import Flask, render_template, Response, request
 import cv2
-import mediapipe as np
+import mediapipe as mp
 import torch
 import numpy as np
 
@@ -13,6 +13,7 @@ def load_model():
     # Carga el modelo de detección de objetos YOLOv5
     model = torch.hub.load("ultralytics/yolov5", model="yolov5s", pretrained=True)
     return model
+
 
 def get_bboxes(preds):
     # Obtiene los cuadros delimitadores de las detecciones
@@ -35,15 +36,15 @@ def gen_frame():
 
         if ZONE is None:
             height, width, _ = frame.shape
-            ZONE = np.array([[0, 0], [width, 0], [width, height], [0, height]])
+            ZONE = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.int32)
 
         preds = model(frame)
         bboxes = get_bboxes(preds)
 
         detections = 0
         for box in bboxes:
-            xc = (box[0] + box[2]) // 2
-            yc = (box[1] + box[3]) // 2
+            xc = int((box[0] + box[2]) // 2)
+            yc = int((box[1] + box[3]) // 2)
 
             # Verifica si la detección está dentro de la zona válida
             if cv2.pointPolygonTest(ZONE, (xc, yc), False) >= 0:
@@ -87,10 +88,10 @@ def update_zone():
         return 'Error: Las coordenadas deben tener 4 valores separados por comas.'
 
     try:
-        ZONE = np.array([[int(coordinates[0]), int(coordinates[1])],
-                         [int(coordinates[2]), int(coordinates[3])],
-                         [int(coordinates[4]), int(coordinates[5])],
-                         [int(coordinates[6]), int(coordinates[7])]])
+        ZONE = np.array([[int(coordinates[0]) * 0.8, int(coordinates[1]) * 0.8],
+                         [int(coordinates[2]) * 0.8, int(coordinates[3]) * 0.8],
+                         [int(coordinates[4]) * 0.8, int(coordinates[5]) * 0.8],
+                         [int(coordinates[6]) * 0.8, int(coordinates[7]) * 0.8]], dtype=np.int32)
         return 'ZONE actualizado correctamente'
     except ValueError:
         return 'Error: Las coordenadas deben ser valores numéricos enteros.'
