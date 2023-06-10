@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <title>Index</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
@@ -30,8 +31,6 @@
             z-index: 0;
         }
 
-
-
         #zone-input {
             margin-top: 10px;
             width: 100%;
@@ -40,36 +39,117 @@
         #submit-button {
             margin-top: 10px;
         }
+
+        .contenedor-padre {
+	        display: flex;
+            justify-content: center;
+        }
+
+        .div-centrado {
+            display: inline-block;
+            margin: 10px;
+        }
+        .margen-opcion{
+        margin-right: 10px;
+        margin-left: 10px;
+        margin-bot: 10px;
     </style>
 </head>
-<body class="container">
-    <h1>Camara</h1>
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-        <img id="image" src="{{url_for('video')}}" width="800" height="600">
+<body class="">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample08" aria-controls="navbarsExample08" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-md-center" id="navbarsExample08">
+              <ul class="navbar-nav">
+                <li class="nav-item active">
+                  <a class="nav-link" href="#">Proyecto IA<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Que hacemos...!</a>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">Tipos de detecciones</a>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#">Detección de objetos con webcam</a>
+                    <a class="dropdown-item" href="#">Detección de objetos de videos</a>
+                    <a class="dropdown-item" href="#">Detección de objetos de imagenes</a>
+                  </div>
+                </li    >
+              </ul>
+            </div>
+          </nav>
+    </header>
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <div class="container">
+        <h1 class="display-3">Detección de Objetos con Webcam</h1>
+        <p>Esta funcion permite la detección de objetos segun la opcion que escoja. Seleccione y rellene todas las opciones y deje que la IA haga el resto</p>
+        </div>
     </div>
-    <div id="coordinates">
-        Punto 1: (<span id="point1-x"></span>, <span id="point1-y"></span>)<br>
-        Punto 2: (<span id="point2-x"></span>, <span id="point2-y"></span>)<br>
-        Punto 3: (<span id="point3-x"></span>, <span id="point3-y"></span>)<br>
-        Punto 4: (<span id="point4-x"></span>, <span id="point4-y"></span>)
+
+    <div class="container">
+        <div class="contenedor-padre">
+
+            <div class="div-centrado">
+                <div class=" card">
+                    <div class="card-body">
+                        <h4 class="card-title">Selecciona un area a detectar</h4>
+                        <p>Puedes seleccionar un area a detectar si lo deseas para que la detección solo se haga en esa area y no en toda la imagen. No es obligatorio marcar esta opción.</p>
+                        <div>
+                            <div id="coordinates">
+                                Punto 1: (<span id="point1-x"></span>, <span id="point1-y"></span>)<br>
+                                Punto 2: (<span id="point2-x"></span>, <span id="point2-y"></span>)<br>
+                                Punto 3: (<span id="point3-x"></span>, <span id="point3-y"></span>)<br>
+                                Punto 4: (<span id="point4-x"></span>, <span id="point4-y"></span>)
+                            </div>
+                            <input type="text" id="zone-input" disabled>
+                            <button id="submit-button" class="btn btn-primary" onclick="updateZone()">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class=" card">
+                    <div class="card-body">
+                        <h4 class="card-title">Seleccion de objetos:</h4>
+                        <p>Selecciona algun objeto que deseas detectar con la camara, una vez seleccionado la IA empezara a detectar el objeto que seleccionaste y su cantidad. Es obligatorio seleccionar una opcion.</p>
+                        <form action="/update_name" method="POST">
+                            <label for="selected_name">Seleccione un objeto:</label>
+                            <select name="selected_name" class="form-control" id="selected_name">
+                                {% for name in objetos %}
+                                <option value="{{ name }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <button type="submit" class="btn btn-primary">Enviar selección</button>
+                        </form>
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="div-centrado">
+                <h4 class="card-title">Tu webcam</h4>
+                <div id="canvas-container">
+                    <canvas id="canvas"></canvas>
+                    <img id="image" src="{{url_for('video')}}">
+                </div>
+
+                <div style="margin-top: 20px">
+                    <h4>Opciones</h4>
+                    <nav class="nav justify-content-center">
+                      <a class="nav-link margen-opcion btn btn-primary" href="{{ url_for('reset_detection') }}">Iniciar Detección de Objetos</a>
+                      <a class="nav-link margen-opcion btn btn-warning" href="{{ url_for('stop_detection') }}">Detener Detección de Objetos</a>
+                      <a class="nav-link margen-opcion btn btn-success" href="{{ url_for('download_csv') }}">Descargar Reporte </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
     </div>
-    <input type="text" id="zone-input">
-    <button id="submit-button" onclick="updateZone()">Enviar</button>
-
-    <h2>Seleccione el nombre:</h2>
-    <form action="/update_name" method="POST">
-        <label for="selected_name">Select a name:</label>
-        <select name="selected_name" id="selected_name">
-            {% for name in objetos %}
-            <option value="{{ name }}">{{ name }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <button type="submit">Submit</button>
-    </form>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
     <script>
         // Obtén el lienzo y el contexto
         var canvas = document.getElementById('canvas');
@@ -205,7 +285,20 @@
                 console.log('Error al enviar la selección al servidor:', error);
             });
         }
-
+        $(document).ready(function() {
+            $('#stopDetectionBtn').click(function() {
+              $.ajax({
+                type: 'POST',
+                url: '/stop_detection',
+                success: function(response) {
+                  // Actualizar el contenido en la página sin recargarla
+                  $('#stopDetectionBtn').prop('disabled', true);
+                  $('#startDetectionBtn').prop('disabled', false);
+                  $('#detectionStatus').text('Detección detenida');
+                }
+              });
+            });
+        });
     </script>
 </body>
 </html>
